@@ -6,12 +6,19 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include <pthread.h>
+
 #include "glueVars.h"
 #include "lua_value_operation.h"
 #include "lua_bit_array.h"
 #include "lua_timer.h"
+#include "lua_main.h"
+
+#include "coonix.h"
 
 extern uint64_t common_ticktime__;
+
+pthread_mutex_t bufferLock; //mutex for the internal buffers
 
 static const luaL_Reg loadedlibs[] = {
         {"iec_io", luaopen_operation_value},
@@ -53,7 +60,7 @@ int run_lua_file(const char* file_name, lua_State* L)
     return error;
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
     /* initial */
     //gets the starting point for the clock
@@ -66,6 +73,7 @@ int main(void)
     glueVars();
 
     /* run program */
+    initializeHardware();
     char* lua_argv[] = { (char *)"lua", NULL };
 
     lua_State *L = luaL_newstate();  /* create state */
@@ -76,19 +84,21 @@ int main(void)
 
     load_lua_library(L);
 
-    run_lua_file("../lua/init.lua", L);
+    //run_lua_file("../lua/init.lua", L);
 
     while(1) {
         //1.read input image
+        updateBuffersIn();
         //2.lock mutex
+        pthread_mutex_lock(&bufferLock);
         //3.update input image table with data from slave devices
-
         //4.execute plc program logic
-        run_lua_file("../lua/run.lua", L);
+        //run_lua_file("../lua/run.lua", L);
+        lua_main(argc, lua_argv, L);
         //5.unlock mutex
-
+        pthread_mutex_unlock(&bufferLock);
         //6.write output image
-
+        updateBuffersOut();
         //7.update time
         update_time();
         sleep_until(&timer_start, common_ticktime__);

@@ -10,6 +10,8 @@ add_executable(iec61131_library
         src/lua_value_operation.c
         src/lua_bit_array.c
         src/lua_timer.c
+        src/lua.c
+        src/coonix.c
         src/main.c)
 
 add_library(operation_value SHARED src/lua_value_operation.c)

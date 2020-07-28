@@ -80,4 +80,7 @@ typedef struct {
     uint8_t body[STR_MAX_LEN];
 } /* __attribute__((packed)) */ IEC_STRING;  /* packed is gcc specific! */
 
+#define FALSE 0
+#define TRUE  1
+
 #endif /*IEC_TYPES_H*/
